@@ -1,9 +1,9 @@
-export type KumeQuestion = {
+export type KumenQuestion = {
   id: string;
   text: string;
 };
 
-export const KUME_QUESTIONS: KumeQuestion[] = [
+export const KUMEN_QUESTIONS: KumenQuestion[] = [
   { id: "q1", text: "¿Qué parte de tu día hoy se sintió más pesada de sostener?" },
   { id: "q2", text: "¿En qué momento hoy notaste que reaccionaste en automático?" },
   { id: "q3", text: "¿Qué estabas intentando evitar sentir cuando hiciste eso?" },
@@ -16,13 +16,9 @@ export const KUME_QUESTIONS: KumeQuestion[] = [
   { id: "q10", text: "¿Qué necesitarías ahora mismo para estar un poco más en paz?" },
 ];
 
-// Keys
 export const KUME_START_KEY = "kume_start_date_iso";
 
-// Compat: si venías usando la key antigua, la migramos sin perder el día.
-const LEGACY_KUMEN_START_KEY = "kumen_start_date_iso";
-
-// Helpers (sin problemas raros de timezone): usamos YYYY-MM-DD
+// Helpers (usamos YYYY-MM-DD en local)
 function toISODate(d: Date) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -31,7 +27,6 @@ function toISODate(d: Date) {
 }
 
 function daysBetween(a: Date, b: Date) {
-  // Comparamos solo por fecha (medianoche local)
   const a0 = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
   const b0 = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
   const ms = 24 * 60 * 60 * 1000;
@@ -43,19 +38,9 @@ function daysBetween(a: Date, b: Date) {
  * Esa fecha define el "Día 1".
  */
 export function getOrCreateStartDateISO(today = new Date()): string {
-  if (typeof window === "undefined") return toISODate(today); // fallback SSR
-
-  // Migración desde key antigua (si existe)
-  const legacy = window.localStorage.getItem(LEGACY_KUMEN_START_KEY);
-  const current = window.localStorage.getItem(KUME_START_KEY);
-
-  if (current) return current;
-
-  if (legacy) {
-    window.localStorage.setItem(KUME_START_KEY, legacy);
-    return legacy;
-  }
-
+  if (typeof window === "undefined") return toISODate(today);
+  const existing = window.localStorage.getItem(KUME_START_KEY);
+  if (existing) return existing;
   const created = toISODate(today);
   window.localStorage.setItem(KUME_START_KEY, created);
   return created;
@@ -63,30 +48,19 @@ export function getOrCreateStartDateISO(today = new Date()): string {
 
 /**
  * Día 1 = q1, Día 2 = q2, etc. basado en startDate.
- * Devuelve SOLO el texto (string) para usar directo en UI.
+ * SIEMPRE devuelve un objeto {id, text}.
  */
-export function pickDailyQuestionFromStartDate(startDateISO: string, today = new Date()): string {
-  const q = pickDailyQuestionObjectFromStartDate(startDateISO, today);
-  return q.text;
-}
-
-/**
- * Variante (opcional): devuelve el objeto completo {id, text}.
- */
-export function pickDailyQuestionObjectFromStartDate(
+export function pickDailyQuestionFromStartDate(
   startDateISO: string,
   today = new Date()
-): KumeQuestion {
+): KumenQuestion {
   const [y, m, d] = startDateISO.split("-").map(Number);
   const start = new Date(y, (m ?? 1) - 1, d ?? 1);
   const delta = daysBetween(start, today);
-  const idx = delta % KUME_QUESTIONS.length;
-  return KUME_QUESTIONS[idx];
+  const idx = delta % KUMEN_QUESTIONS.length;
+  return KUMEN_QUESTIONS[idx];
 }
 
-/**
- * Reset opcional (por si luego quieres un botón en UI).
- */
 export function resetKumeStartDate(today = new Date()) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(KUME_START_KEY, toISODate(today));
