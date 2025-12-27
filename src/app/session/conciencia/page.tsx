@@ -46,7 +46,7 @@ export default function ConcienciaSessionPage() {
 
   useEffect(() => {
     const startISO = getOrCreateStartDateISO(new Date());
-    const qRaw = pickDailyQuestionFromStartDate(startISO, new Date());
+const qRaw = pickDailyQuestionFromStartDate(startISO, new Date());
 const q = toText(qRaw).trim();
 
 
