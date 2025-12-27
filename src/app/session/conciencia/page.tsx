@@ -76,9 +76,12 @@ const q = (qObj.text || "").trim();
     setDeepInvite(false);
 
     const actualMode = overrideMode ?? mode;
-    const nextMessages = [...messages, { role: "user", content: trimmed }];
+    const nextMessages: ChatMessage[] = [
+  ...messages,
+  { role: "user", content: trimmed },
+];
 
-    setMessages(nextMessages);
+setMessages(nextMessages);
     setInput("");
 
     try {
