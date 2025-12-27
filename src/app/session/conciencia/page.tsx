@@ -46,8 +46,11 @@ export default function ConcienciaSessionPage() {
 
   useEffect(() => {
     const startISO = getOrCreateStartDateISO(new Date());
-const qRaw = pickDailyQuestionFromStartDate(startISO, new Date());
-const q = toText(qRaw).trim();
+const qObj = pickDailyQuestionFromStartDate(startISO, new Date()) as unknown;
+const q =
+  (typeof qObj === "string"
+    ? qObj
+    : ((qObj as any)?.text ?? (qObj as any)?.texto ?? ""))?.trim?.() ?? "";	
 
 
     const initial: ChatMessage[] = [
