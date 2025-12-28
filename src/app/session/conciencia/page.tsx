@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getOrCreateStartDateISO, pickDailyQuestionFromStartDate } from "@/lib/kume/questions";
+import {
+  getOrCreateStartDateISO,
+  pickDailyQuestionFromStartDate,
+} from "@/lib/kume/questions";
 import { clearSenderoToday } from "@/lib/kume/sendero";
 import { KUME_BG } from "@/lib/kume/ui";
 
@@ -28,6 +31,16 @@ function toText(v: unknown): string {
   return String(v);
 }
 
+function ThinkingDots() {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="inline-block h-2 w-2 rounded-full bg-neutral-200/80 animate-bounce [animation-delay:-0.2s]" />
+      <span className="inline-block h-2 w-2 rounded-full bg-neutral-200/80 animate-bounce [animation-delay:-0.1s]" />
+      <span className="inline-block h-2 w-2 rounded-full bg-neutral-200/80 animate-bounce" />
+    </div>
+  );
+}
+
 export default function ConcienciaSessionPage() {
   const router = useRouter();
 
@@ -45,10 +58,9 @@ export default function ConcienciaSessionPage() {
   );
 
   useEffect(() => {
-   const startISO = getOrCreateStartDateISO(new Date());
-const qObj = pickDailyQuestionFromStartDate(startISO, new Date());
-const q = (qObj.text || "").trim();	
-
+    const startISO = getOrCreateStartDateISO(new Date());
+    const qObj = pickDailyQuestionFromStartDate(startISO, new Date());
+    const q = (qObj.text || "").trim();
 
     const initial: ChatMessage[] = [
       {
@@ -64,8 +76,9 @@ const q = (qObj.text || "").trim();
     setMessages(initial);
   }, []);
 
+  // ✅ Auto-scroll (ya lo tenías) + incluye el indicador pensando
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isSending, deepInvite]);
 
   async function sendUserMessage(text: string, overrideMode?: Mode) {
@@ -76,12 +89,13 @@ const q = (qObj.text || "").trim();
     setDeepInvite(false);
 
     const actualMode = overrideMode ?? mode;
-    const nextMessages: ChatMessage[] = [
-  ...messages,
-  { role: "user", content: trimmed },
-];
 
-setMessages(nextMessages);
+    const nextMessages: ChatMessage[] = [
+      ...messages,
+      { role: "user", content: trimmed },
+    ];
+
+    setMessages(nextMessages);
     setInput("");
 
     try {
@@ -89,6 +103,7 @@ setMessages(nextMessages);
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: actualMode, messages: nextMessages }),
+        cache: "no-store",
       });
 
       const data = await res.json();
@@ -96,7 +111,10 @@ setMessages(nextMessages);
       if (!res.ok) throw new Error(data?.detail || "Error");
 
       if (data?.text) {
-        setMessages((prev) => [...prev, { role: "assistant", content: toText(data.text) }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: toText(data.text) },
+        ]);
       }
 
       if (data?.suggestDeep && actualMode === "daily") {
@@ -122,7 +140,9 @@ setMessages(nextMessages);
   }
 
   return (
-    <main className={`min-h-dvh text-neutral-100 flex items-center justify-center p-5 ${KUME_BG}`}>
+    <main
+      className={`min-h-dvh text-neutral-100 flex items-center justify-center p-5 ${KUME_BG}`}
+    >
       <section className="w-full max-w-md rounded-[28px] border border-white/10 bg-white/[0.06] backdrop-blur-md p-6 shadow-xl">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
@@ -156,6 +176,13 @@ setMessages(nextMessages);
               {m.content}
             </div>
           ))}
+
+          {/* ✅ Indicador pensando dentro del hilo (misma estética) */}
+          {isSending && (
+            <div className="rounded-2xl bg-cyan-500/[0.08] px-4 py-3 text-sm">
+              <ThinkingDots />
+            </div>
+          )}
 
           {deepInvite && (
             <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-4">
@@ -193,6 +220,7 @@ setMessages(nextMessages);
             onChange={(e) => setInput(e.target.value)}
             placeholder="Escribe una frase…"
             className="w-full min-h-[80px] resize-none rounded-2xl bg-black/30 border border-white/10 px-4 py-3 text-sm"
+            disabled={isSending}
           />
 
           <button

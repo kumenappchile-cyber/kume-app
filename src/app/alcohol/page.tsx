@@ -8,6 +8,16 @@ import { KUME_BG } from "@/lib/kume/ui";
 type Msg = { role: "user" | "assistant"; content: string };
 type Mode = "daily" | "urgent" | "relapse";
 
+function ThinkingDots() {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="inline-block h-2 w-2 rounded-full bg-neutral-200/80 animate-bounce [animation-delay:-0.2s]" />
+      <span className="inline-block h-2 w-2 rounded-full bg-neutral-200/80 animate-bounce [animation-delay:-0.1s]" />
+      <span className="inline-block h-2 w-2 rounded-full bg-neutral-200/80 animate-bounce" />
+    </div>
+  );
+}
+
 export default function AlcoholPage() {
   const [messages, setMessages] = useState<Msg[]>([
     {
@@ -22,10 +32,16 @@ export default function AlcoholPage() {
   const [mode, setMode] = useState<Mode>("daily");
 
   const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     taRef.current?.focus();
   }, []);
+
+  // ✅ Auto-scroll: baja cuando cambian mensajes o loading (pensando)
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length, loading]);
 
   function modeLabel(m: Mode) {
     if (m === "urgent") return "Urgencia";
@@ -64,6 +80,7 @@ export default function AlcoholPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode, messages: nextMessages }),
+        cache: "no-store",
       });
 
       const data = await res.json();
@@ -78,7 +95,7 @@ export default function AlcoholPage() {
         {
           role: "assistant",
           content:
-            "Hubo un problema técnico.\nNo tiene que ver contigo.\n\nPor ahora, es suficiente. No estás solo con esto.",
+            "Hubo un problema técnico.\nNo tiene que ver contigo.\n\nPor hoy, es suficiente.\nNo estás solo con esto.",
         },
       ]);
       if (mode !== "daily") setMode("daily");
@@ -96,7 +113,9 @@ export default function AlcoholPage() {
       : "bg-emerald-500/20 text-emerald-100 border-emerald-400/30";
 
   return (
-    <main className={`min-h-dvh text-neutral-100 flex items-center justify-center p-5 ${KUME_BG}`}>
+    <main
+      className={`min-h-dvh text-neutral-100 flex items-center justify-center p-5 ${KUME_BG}`}
+    >
       <section className="w-full max-w-md rounded-[28px] border border-white/10 bg-white/[0.06] backdrop-blur-md p-6 shadow-xl">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
@@ -129,6 +148,15 @@ export default function AlcoholPage() {
               {m.content}
             </div>
           ))}
+
+          {/* ✅ Indicador pensando dentro del hilo, sin cambiar look */}
+          {loading && (
+            <div className="rounded-2xl bg-white/[0.08] border border-white/10 px-4 py-3 text-sm leading-6">
+              <ThinkingDots />
+            </div>
+          )}
+
+          <div ref={bottomRef} />
         </div>
 
         {/* Controles */}
@@ -189,7 +217,8 @@ export default function AlcoholPage() {
           </button>
 
           <div className="text-[11px] text-neutral-300/80">
-            Tip: usa “Estoy con ganas ahora” solo si es riesgo inmediato. Si no, quédate en Diario.
+            Tip: usa “Estoy con ganas ahora” solo si es riesgo inmediato. Si no,
+            quédate en Diario.
           </div>
         </div>
       </section>
