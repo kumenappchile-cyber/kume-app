@@ -18,12 +18,12 @@ function ThinkingDots() {
   );
 }
 
-export default function AlcoholPage() {
+export default function EnergyAndConsumptionPage() {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "assistant",
       content:
-        "Estás aquí.\n\nNo para prometer nada.\nNo para controlarte.\nSolo para mirar con honestidad.\n\n¿Qué está pasando hoy con el alcohol?",
+        "Estás aquí.\n\nNo para prometer nada.\nNo para controlarte.\n\nSolo para mirar con honestidad.\n\n¿Qué está pasando hoy con tu energía y tus impulsos?",
     },
   ]);
 
@@ -38,20 +38,19 @@ export default function AlcoholPage() {
     taRef.current?.focus();
   }, []);
 
-  // ✅ Auto-scroll: baja cuando cambian mensajes o loading (pensando)
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, loading]);
 
   function modeLabel(m: Mode) {
-    if (m === "urgent") return "Urgencia";
-    if (m === "relapse") return "Recaída";
+    if (m === "urgent") return "Impulso";
+    if (m === "relapse") return "Ruptura";
     return "Diario";
   }
 
   function pickQuickText(m: Mode) {
-    if (m === "urgent") return "Estoy con ganas ahora mismo. Estoy a punto.";
-    if (m === "relapse") return "Volví a beber hoy.";
+    if (m === "urgent") return "Estoy sintiendo un impulso fuerte ahora.";
+    if (m === "relapse") return "Hoy volví a un consumo que quiero observar.";
     return "";
   }
 
@@ -121,7 +120,9 @@ export default function AlcoholPage() {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <div className="text-sm font-semibold">KÜME</div>
-            <div className="text-xs text-neutral-300">Sendero · Alcohol</div>
+            <div className="text-xs text-neutral-300">
+              Sendero · Energía y consumo
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -149,7 +150,6 @@ export default function AlcoholPage() {
             </div>
           ))}
 
-          {/* ✅ Indicador pensando dentro del hilo, sin cambiar look */}
           {loading && (
             <div className="rounded-2xl bg-white/[0.08] border border-white/10 px-4 py-3 text-sm leading-6">
               <ThinkingDots />
@@ -173,7 +173,7 @@ export default function AlcoholPage() {
                   : "bg-white/[0.06] border-white/20 text-neutral-100 hover:bg-white/[0.10]",
               ].join(" ")}
             >
-              Estoy con ganas ahora
+              Siento un impulso ahora
             </button>
 
             <button
@@ -187,7 +187,7 @@ export default function AlcoholPage() {
                   : "bg-white/[0.06] border-white/20 text-neutral-100 hover:bg-white/[0.10]",
               ].join(" ")}
             >
-              Volví a beber
+              Hoy volví a consumir
             </button>
           </div>
 
@@ -195,13 +195,7 @@ export default function AlcoholPage() {
             ref={taRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              mode === "urgent"
-                ? "Escribe una frase corta…"
-                : mode === "relapse"
-                ? "Escribe una frase…"
-                : "Escribe una frase…"
-            }
+            placeholder="Escribe una frase…"
             rows={3}
             disabled={loading}
             className="w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-neutral-100 placeholder:text-neutral-400 outline-none focus:border-cyan-300/40"
@@ -217,8 +211,8 @@ export default function AlcoholPage() {
           </button>
 
           <div className="text-[11px] text-neutral-300/80">
-            Tip: usa “Estoy con ganas ahora” solo si es riesgo inmediato. Si no,
-            quédate en Diario.
+            Tip: usa “Siento un impulso ahora” solo si es intenso.  
+            Si no, quédate en Diario.
           </div>
         </div>
       </section>
